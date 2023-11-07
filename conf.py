@@ -11,7 +11,7 @@ debug_flag = True
 seed = 54321
 
 # learning rate
-lr = 1e-4
+lr = 2e-5
 
 # logging gradient and weight distribution to log file
 # useful for debugging, but makes more 
@@ -20,7 +20,7 @@ log_lora_weight = False
 
 # how wide would LoRA layers be? (N x lora_rank) and (lora_rank x M).
 # Larger number - larger layer - more capacity.
-lora_rank = 4
+lora_rank = 24
 
 log_level = logging.DEBUG
 
@@ -55,7 +55,7 @@ prompt = 'Cubestat reports the following metrics: '
 snapshots_path = 'out'
 
 # plaintext input file which will be tokenized and used for training 
-#finetune_file = './test_data/cubestat.txt'
+finetune_file = './test_data/*.txt'
 
 # which model to use - path to raw model
 llama2_model_path = './llama-2-ko-7b'

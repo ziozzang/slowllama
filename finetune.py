@@ -23,7 +23,7 @@ if __name__ == '__main__':
     bos_token = tokenizer.bos_token
     # data to finetune on
     text = ''
-    for fn in glob.glob('./test_data/*.txt'):
+    for fn in glob.glob(finetune_file):
         with open(fn) as f:
            text_read = f.read()
            if len(text_read.strip()) == 0:
