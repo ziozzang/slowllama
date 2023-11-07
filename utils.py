@@ -1,6 +1,7 @@
 import torch
 from transformers import AutoTokenizer
 import logging
+from conf import *
 
 def device_map(device):
     if str(device).startswith('mps'):
