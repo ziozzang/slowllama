@@ -71,6 +71,8 @@ def cleanup_cache(device='cpu'):
 class Tokenizer:
     def __init__(self, path):
         self.model = AutoTokenizer.from_pretrained(path)
+        self.eos_token = self.model.eos_token
+        self.bos_token = self.model.bos_token
 
     def encode(self, text, bos=False, eos=False):
         b = [self.model.bos_token_id] if self.model.bos_token else []

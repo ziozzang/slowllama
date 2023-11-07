@@ -5,7 +5,7 @@ import logging
 device = 'mps'
 
 # print for debugging (no use of logging... - minimalize disk io)
-debug_flag = False
+debug_flag = True
 
 # random seed to use. Makes runs reproducible.
 seed = 54321
