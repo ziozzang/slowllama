@@ -6,6 +6,11 @@ import os
 from loader import load_frozen
 from utils import Tokenizer, greedy_gen
 from conf_fp16 import *
+from blackbox import ModelMMap
+
+# Set Model Optimization for readonly(no dump on exit)
+mmaps = ModelMMap.instance()
+mmaps.set_readonly()
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.DEBUG)
 

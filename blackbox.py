@@ -6,7 +6,9 @@ from utils import device_map, next_id, device_supports_dtype
 from model_config import ModelArgs
 from io import BytesIO
 import atexit
+from conf import *
 
+# Optimze Memory Map for Lower Disk/SSD IO. (for GPU optimization/SSD Lifespan)
 class SingletonInstane:
   __instance = None
 
@@ -23,28 +25,52 @@ class SingletonInstane:
 class ModelMMap(SingletonInstane):
     def __init__(self):
         self.d = {}
+        self.readonly = False
     def get(self, k):
-        if k in self.d:
-            return self.d[k]
-        else:
+        if optimize_fileio:
+          #if debug_flag:
+          #  print('LM:G>', k)
+          if k in self.d:
+            #if debug_flag:
+            #  print('LM:G>> RTN_INNER', k)
+            return BytesIO(self.d[k])
+          else:
             if os.path.exists(k):
+                #if debug_flag:
+                #    print('LM:G>> LOAD FROM FILE',k)
                 with open(k, "rb") as fh:
-                    self.d[k] = BytesIO(fh.read())
+                    self.d[k] = fh.read()
             else:
-                self.d[k] = BytesIO()
-            return self.d[k]
+                #if debug_flag:
+                #    print('LM:G>> Gen New',k)
+                return BytesIO()
+            return BytesIO(self.d[k])
+        else:
+          return open(k,'rb')
     def put(self, k, v):
-        self.d[k] = v
-    
+        if optimize_fileio:
+            #if debug_flag:
+            #    print('LM:P>',k)
+            self.d[k] = v.getbuffer()
+            #print('LM:P/LEN>', len(self.d[k]))
+        else:
+          return open(k, 'wb')
+    def set_readonly(self):
+        self.readonly = True
     def dump(self):
+        if self.readonly:
+            return # nothing to do
         for i in self.d.keys():
+            #if debug_flag:
+            #    print('LM:E/D>', i)
             with open(i, "wb") as f:
-                f.write(self.d[i].getbuffer())
+                f.write(self.d[i])
 
 # Dump mmap
 def exit_handler():
-    mmaps = ModelMMap.instance()
-    mmaps.dump()
+    if optimize_fileio:
+        mmaps = ModelMMap.instance()
+        mmaps.dump()
 
 atexit.register(exit_handler)
 

@@ -9,6 +9,7 @@ from plot_lora import log_lora
 from utils import Tokenizer, greedy_gen
 
 from conf_fp16 import *
+import time
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(message)s', level=log_level, filename='logs/finetune.log')
@@ -24,6 +25,10 @@ if __name__ == '__main__':
     for fn in glob.glob('./test_data/*.txt'):
         with open(fn) as f:
            text_read = f.read()
+           if len(text_read.strip()) == 0:
+               continue
+           if not text_read.startswith(bos_token):
+               text += bos_token
            text += text_read
            if not text_read.endswith(eos_token):
                text += eos_token
@@ -43,6 +48,7 @@ if __name__ == '__main__':
 
     last_loss = None
     for i in range(iters):
+        start_time = time.time()
         if debug_flag:
             print('>> Iteration:', i)
         if i % eval_period == 0 and (i > 0 or eval_before_training):
@@ -68,6 +74,8 @@ if __name__ == '__main__':
             if (i+1) % 20 == 0:
                 logging.info(f'saving snapshot')
                 torch.save(model.state_dict(), os.path.join(snapshots_path, f'state_dict_{i}.pth'))
+        if debug_flag:
+            print(" --- %s seconds ---" % (time.time() - start_time))
     if debug_flag:
         print('>> Finalize (SAVE)')
     torch.save(model.state_dict(), os.path.join(snapshots_path, f'state_dict_{i}.pth'))

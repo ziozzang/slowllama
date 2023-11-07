@@ -32,7 +32,10 @@ iters = 20
 # how long should be the sequence to train on? 
 # we pick seq_len tokens and try to predict token [seq_len + 1]
 #seq_len = 128
-seq_len = 4096
+seq_len = 1024
+
+# Optimize File IO / for SSD life
+optimize_fileio = True
 
 # how large should be the batch size? 
 batch_size = 16
