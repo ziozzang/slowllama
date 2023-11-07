@@ -19,7 +19,7 @@ if __name__ == '__main__':
     with open(finetune_file) as f:
         text = f.read()
 
-    tokenizer = Tokenizer(os.path.join(frozen_model_path, 'tokenizer.model'))
+    tokenizer = Tokenizer(llama2_model_path)
     tokens = tokenizer.encode(text, True, True)
 
     logging.info(f'loaded dataset: {len(tokens)} tokens')
@@ -36,6 +36,8 @@ if __name__ == '__main__':
 
     last_loss = None
     for i in range(iters):
+        if debug_flag:
+            print('>> Iteration:', i)
         if i % eval_period == 0 and (i > 0 or eval_before_training):
             greedy_gen(model, tokenizer, device, prompt, gen_tokens)
         logging.info(f'starting iteration {i}')
@@ -44,6 +46,8 @@ if __name__ == '__main__':
         # both forward and backward passes are here.
         # returned loss is a scalar, not variable
         loss = model.manual_loop(X, y)
+        if debug_flag:
+            print(' ---> LOSS:', loss)
         opt.step()
 
         # optional logging of lora weights/gradients
@@ -54,5 +58,9 @@ if __name__ == '__main__':
             last_loss = loss
         elif loss < last_loss:
             last_loss = loss
-            logging.info(f'saving snapshot')
-            torch.save(model.state_dict(), os.path.join(snapshots_path, f'state_dict_{i}.pth'))
+            if (i+1) % 20 == 0:
+                logging.info(f'saving snapshot')
+                torch.save(model.state_dict(), os.path.join(snapshots_path, f'state_dict_{i}.pth'))
+    if debug_flag:
+        print('>> Finalize (SAVE)')
+    torch.save(model.state_dict(), os.path.join(snapshots_path, f'state_dict_{i}.pth'))

@@ -35,8 +35,8 @@ prompt = 'slowllama is a '
 if not os.path.exists(snapshots_path):
     os.makedirs(snapshots_path)
 
-tokenizer_path = os.path.join(model_path, 'tokenizer.model')
-tokenizer = Tokenizer(tokenizer_path)
+
+tokenizer = Tokenizer(llama2_model_path)
 
 def format_sample(sample):
     instruction = f"### Instruction\n{sample['instruction']}\n\n"

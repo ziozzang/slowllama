@@ -4,6 +4,9 @@ import logging
 # 'cpu', 'mps' (for Apple devices) or 'cuda'
 device = 'mps'
 
+# print for debugging (no use of logging... - minimalize disk io)
+debug_flag = False
+
 # random seed to use. Makes runs reproducible.
 seed = 54321
 
@@ -51,4 +54,4 @@ snapshots_path = 'out'
 finetune_file = './test_data/cubestat.txt'
 
 # which model to use - path to raw model
-llama2_model_path = '/Volumes/LLAMAS/llama-2-7b'
+llama2_model_path = './llama-2-ko-7b'

@@ -1,5 +1,5 @@
 import torch
-import sentencepiece
+from transformers import AutoTokenizer
 import logging
 
 def device_map(device):
@@ -69,12 +69,22 @@ def cleanup_cache(device='cpu'):
     
 class Tokenizer:
     def __init__(self, path):
-        self.model = sentencepiece.SentencePieceProcessor(path)
+        self.model = AutoTokenizer.from_pretrained(path)
 
     def encode(self, text, bos=False, eos=False):
-        b = [self.model.bos_id()] if bos else []
-        e = [self.model.eos_id()] if eos else []
-        return b + self.model.encode(text) + e
+        b = [self.model.bos_token_id] if self.model.bos_token else []
+        e = [self.model.eos_token_id] if self.model.eos_token else []
+        if debug_flag:
+            print('>TOKENS:',self.model.tokenize(text))
+        ret = self.model(text)['input_ids'] + e
+        l_b = len(b) # Append BOS token front of...
+        if b != ret[0:l_b]:
+            ret = b + ret
+        if debug_flag:
+            print('>ENC:', ret)
+        return ret
 
     def decode(self, tokens):
-        return self.model.decode(tokens)
+        if debug_flag:
+            print('>DEC:', tokens[0])
+        return self.model.decode(tokens[0])
