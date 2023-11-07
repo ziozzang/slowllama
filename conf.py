@@ -31,7 +31,8 @@ iters = 20
 
 # how long should be the sequence to train on? 
 # we pick seq_len tokens and try to predict token [seq_len + 1]
-seq_len = 128
+#seq_len = 128
+seq_len = 4096
 
 # how large should be the batch size? 
 batch_size = 16
@@ -51,7 +52,7 @@ prompt = 'Cubestat reports the following metrics: '
 snapshots_path = 'out'
 
 # plaintext input file which will be tokenized and used for training 
-finetune_file = './test_data/cubestat.txt'
+#finetune_file = './test_data/cubestat.txt'
 
 # which model to use - path to raw model
 llama2_model_path = './llama-2-ko-7b'
