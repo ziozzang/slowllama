@@ -4,10 +4,37 @@ import torch
 
 from utils import device_map, next_id, device_supports_dtype
 from model_config import ModelArgs
+from io import BytesIO
+
+class SingletonInstane:
+  __instance = None
+
+  @classmethod
+  def __getInstance(cls):
+    return cls.__instance
+
+  @classmethod
+  def instance(cls, *args, **kargs):
+    cls.__instance = cls(*args, **kargs)
+    cls.instance = cls.__getInstance
+    return cls.__instance
+
+class ModelMMap(SingletonInstane):
+    def __init__(self):
+        self.d = {}
+    def get(self, k):
+        if k in self.d:
+            return self.d[k]
+        else:
+            self.d[k] = BytesIO()
+    def put(self, k, v):
+        self.d[k] = v
+
 
 class BlackboxDisk(torch.nn.Module):
     def __init__(self, module, args: ModelArgs):
         super().__init__()
+        self.mmaps = ModelMMap.instance()
         self.module_id = next_id()
         self.input_id = next_id()
         self.compute_dtype = args.compute_dtype
@@ -16,7 +43,9 @@ class BlackboxDisk(torch.nn.Module):
         # TODO: can we deduce this from the data itself
         self.frozen_dtype = args.frozen_dtype
         if args.init_frozen:
-            torch.save(module.to('cpu').to(self.frozen_dtype), self.frozen_path())
+            t = BytesIO()
+            torch.save(module.to('cpu').to(self.frozen_dtype), t)
+            self.mmaps.put(self.frozen_path(), t)
 
     def frozen_path(self):
         folder = os.path.join(self.served_model_path, 'frozen')
@@ -31,23 +60,31 @@ class BlackboxDisk(torch.nn.Module):
         return f'{folder}/saved_{self.input_id}.pt'
 
     def loaded_inner(self):
-        return torch.load(self.frozen_path(), map_location='cpu')
+        t = self.mmaps.get(self.frozen_path())
+        return torch.load(t, map_location='cpu')
     
     def load(self, device):
         if device_supports_dtype(device, self.frozen_dtype):
-            return torch.load(self.frozen_path(), map_location=device_map(device)).to(self.compute_dtype)
+            t = self.mmaps.get(self.frozen_path())
+            return torch.load(t, map_location=device_map(device)).to(self.compute_dtype)
         else:
-            res = torch.load(self.frozen_path(), map_location='cpu')
+            t = self.mmaps.get(self.frozen_path())
+            res = torch.load(t, map_location='cpu')
             return res.to(self.compute_dtype).to(device_map(device))
 
     def save(self, module):
-        torch.save(module.to('cpu').to(self.frozen_dtype), self.frozen_path())
+        t = BytesIO()
+        torch.save(module.to('cpu').to(self.frozen_dtype), t)
+        self.mmaps.put(self.frozen_path(), t)
     
     def load_input(self, device):
-        return torch.load(self.input_path(), map_location=torch.device(device_map(device)))
+        t = self.mmaps.get(self.input_path())
+        return torch.load(t, map_location=torch.device(device_map(device)))
 
     def forward(self, input, *args):
-        torch.save(input, self.input_path())
+        t = BytesIO()
+        torch.save(input, t)
+        self.mmaps.put(self.input_path(), t)
         device = device_map(input.device)
         module = self.load(device)
 
