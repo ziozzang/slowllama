@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
     tokenizer = Tokenizer(llama2_model_path)
     eos_token = tokenizer.eos_token
+    bos_token = tokenizer.bos_token
     # data to finetune on
     text = ''
     for fn in glob.glob('./test_data/*.txt'):
