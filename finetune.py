@@ -23,9 +23,12 @@ if __name__ == '__main__':
     text = ''
     for fn in glob.glob('./test_data/*.txt'):
         with open(fn) as f:
-           text += f.read() + eos_token
+           text_read = f.read()
+           text += text_read
+           if not text_read.endswith(eos_token):
+               text += eos_token
     tokens = tokenizer.encode(text, True, True)
-
+    print('>> Token Size:', len(tokens))
     logging.info(f'loaded dataset: {len(tokens)} tokens')
 
     model = load_frozen(frozen_model_path, compute_dtype=compute_dtype, lora_rank=lora_rank, frozen_dtype=frozen_dtype).to(device).to(compute_dtype)

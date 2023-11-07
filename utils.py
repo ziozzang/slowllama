@@ -83,6 +83,9 @@ class Tokenizer:
         l_b = len(b) # Append BOS token front of...
         if b != ret[0:l_b]:
             ret = b + ret
+        l_e = len(e)
+        if e != ret[-l_e:]:
+            ret = ret + e
         if debug_flag:
             print('>ENC:', ret)
         return ret
