@@ -1,4 +1,6 @@
 import os
+import glob
+
 import torch
 import logging
 
@@ -15,11 +17,13 @@ if __name__ == '__main__':
     if not os.path.exists(snapshots_path):
         os.makedirs(snapshots_path)
 
-    # data to finetune on
-    with open(finetune_file) as f:
-        text = f.read()
-
     tokenizer = Tokenizer(llama2_model_path)
+    eos_token = tokenizer.eos_token
+    # data to finetune on
+    text = ''
+    for fn in glob.glob('./test_data/*.txt'):
+        with open(fn) as f:
+           text += f.read() + eos_token
     tokens = tokenizer.encode(text, True, True)
 
     logging.info(f'loaded dataset: {len(tokens)} tokens')
