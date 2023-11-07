@@ -5,6 +5,7 @@ import torch
 from utils import device_map, next_id, device_supports_dtype
 from model_config import ModelArgs
 from io import BytesIO
+import atexit
 
 class SingletonInstane:
   __instance = None
@@ -26,10 +27,26 @@ class ModelMMap(SingletonInstane):
         if k in self.d:
             return self.d[k]
         else:
-            self.d[k] = BytesIO()
+            if os.path.exists(k):
+                with open(k, "rb") as fh:
+                    self.d[k] = BytesIO(fh.read())
+            else:
+                self.d[k] = BytesIO()
+            return self.d[k]
     def put(self, k, v):
         self.d[k] = v
+    
+    def dump(self):
+        for i in self.d.keys():
+            with open(i, "wb") as f:
+                f.write(self.d[i].getbuffer())
 
+# Dump mmap
+def exit_handler():
+    mmaps = ModelMMap.instance()
+    mmaps.dump()
+
+atexit.register(exit_handler)
 
 class BlackboxDisk(torch.nn.Module):
     def __init__(self, module, args: ModelArgs):
